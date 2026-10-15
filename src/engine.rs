@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:RFQ
 // SPDX-License-Identifier: Apache-2.0
 
-//! Ex8:RFQ engine — FX quote-driven trading core (DESIGN.md §1, §4).
+//! Exchange8:RFQ engine — FX quote-driven trading core (DESIGN.md §1, §4).
 //!
 //! The state machine:
 //! `Open → Quoting → Quoted → Traded | Expired | Rejected`, plus the

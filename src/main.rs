@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:RFQ
 // SPDX-License-Identifier: Apache-2.0
 
-//! Ex8:RFQ service binary — FX quote-driven trading (FX design §3.2).
+//! Exchange8:RFQ service binary — FX quote-driven trading (FX design §3.2).
 //!
 //! Hosts the RFQ engine (`engine.rs`): client RFQs, LP quotes, last look,
 //! streaming quotes. The engine is the deterministic core; this shell

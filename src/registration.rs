@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:RFQ
 // SPDX-License-Identifier: Apache-2.0
 
-//! Service self-registration data for Ex8:RFQ (FX quote-driven trading).
+//! Service self-registration data for Exchange8:RFQ (FX quote-driven trading).
 //!
 //! Output via `--print-registration` (see the platform
 //! `sentin8-service-self-registration-design.md`).

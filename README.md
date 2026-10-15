@@ -1,8 +1,8 @@
-# README.md: Ex8:RFQ
+# README.md: Exchange8:RFQ
 
 ## 1. Summary
 
-Ex8:RFQ is the **quote-driven trading** service of the exchange8 vertical: the
+Exchange8:RFQ is the **quote-driven trading** service of the exchange8 vertical: the
 Request-For-Quote engine for FX — clients broadcast an RFQ (pair, side, qty,
 tenor), all entitled liquidity providers (LPs) respond with two-way prices
 inside a bounded quote window, the client hits one quote, and the LP's
@@ -18,7 +18,7 @@ global allocator, graceful drain.
 ## 2. Motivation
 
 - Institutional FX liquidity is split between the central-limit order book
-  (served by Ex8:ME) and **bilateral quote-driven dealing** at large or
+  (served by Exchange8:ME) and **bilateral quote-driven dealing** at large or
   illiquid sizes. The RFQ model needs an engine with fundamentally different
   timing semantics: response windows measured in hundreds of milliseconds,
   per-quote validity, and per-LP last look — none of which fit a price-time
@@ -254,14 +254,14 @@ Pure concepts — how the model fits together (no signatures):
   vertical id-substrate pattern (data-model design §2a) and lands with the
   runtime wiring.
 - The `rfq.currency_exposure` update path (who shifts net positions on
-  dealt trades, and the interplay with Ex8:Risk's limit checks) is a
+  dealt trades, and the interplay with Exchange8:Risk's limit checks) is a
   risk-design decision; only the table and the limit columns exist today.
 - The tape SSE publisher surface (session-entitled consumers) and the
   client-visible quote stream API ride the MD/VFeeds surface design; their
   exact endpoint contract for RFQ is not fixed.
 - Pair `quote_type` routing (`clob` / `rfq` / `stream` / `clob+rfq`) — the
   engine is pair-agnostic today; the router that splits client flows between
-  Ex8:ME (CLOB) and this engine per pair is outstanding.
+  Exchange8:ME (CLOB) and this engine per pair is outstanding.
 
 ---
 

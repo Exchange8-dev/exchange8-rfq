@@ -1,7 +1,7 @@
-# BUSINESS.md: Ex8:RFQ — Business Requirements & Functionality
+# BUSINESS.md: Exchange8:RFQ — Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
-> Ex8:RFQ **does for the business**. For architecture read `README.md`;
+> Exchange8:RFQ **does for the business**. For architecture read `README.md`;
 > for wire-level detail read `DESIGN.md`.
 
 ## 1. Business Purpose
@@ -50,13 +50,13 @@
 
 | Concern | Owner |
 |---|---|
-| Central-limit order book for pair trading | Ex8:ME |
-| Client/LP session transports (FIX 4.4, WebSocket) and codec | Ex8:Gateway |
-| Per-currency limit policy decisions | Ex8:Risk |
-| Position ledger, novation, FX settlement legs | Ex8:Clearing / Ex8:Settlement |
+| Central-limit order book for pair trading | Exchange8:ME |
+| Client/LP session transports (FIX 4.4, WebSocket) and codec | Exchange8:Gateway |
+| Per-currency limit policy decisions | Exchange8:Risk |
+| Position ledger, novation, FX settlement legs | Exchange8:Clearing / Exchange8:Settlement |
 | Fiat money movement itself | Bank8:Ledger |
-| Security master and currency catalog | Ex8:RefData |
-| Consumer-facing market-data products (SSE feeds, book data) | Ex8:MD / Ex8:VFeeds |
+| Security master and currency catalog | Exchange8:RefData |
+| Consumer-facing market-data products (SSE feeds, book data) | Exchange8:MD / Exchange8:VFeeds |
 | Cron schedules (cut-off sweeps as jobs) | Sentin8:Cron |
 | Identity, tokens, M2M client registration | Sentin8:Auth |
 | Message delivery between services | Sentin8:Bus |
@@ -119,7 +119,7 @@ MemBus (newest-wins, session-private) families: `rfq.quote` for live LP
 streaming quotes; `rfq.event` for the anonymized tape.
 
 **Inbound (consumed context):** client and LP session events arrive via
-Ex8:Gateway session transports; reference data (`refdata.security`,
+Exchange8:Gateway session transports; reference data (`refdata.security`,
 `refdata.currency`, pair/tenor masters) is read under declared grants;
 platform events (`sentin8:sys:*` families, Shield policy updates) ride the
 standard shell consumers.
@@ -156,7 +156,7 @@ standard shell consumers.
 
 ## 6. Target-User Roles & Use Cases
 
-| Persona | What they do with Ex8:RFQ |
+| Persona | What they do with Exchange8:RFQ |
 |---|---|
 | FX desk client (institutional) | Requests quotes on a pair/size, compares LP responses, hits the best price, deals at the shown level or lets the RFQ expire |
 | Liquidity provider (sales/FX trader) | Answers RFQs inside the window, exercises bounded last look on hits, serves streaming two-way prices |
@@ -191,12 +191,12 @@ standard shell consumers.
 
 | Relies on | For |
 |---|---|
-| Ex8:Gateway | Client and LP FIX 4.4 / WebSocket session transports and authentication of connections |
-| Ex8:RefData | Security master and currency catalog (security → FX pair extension; currencies) |
-| Ex8:Risk | Currency/tenor limit policy and the 21-check risk matrix applied to RFQ-initiated flows |
-| Ex8:ME | The CLOB serving model for pairs traded on the order book |
-| Ex8:Clearing / Settlement / Bank8:Ledger | Position, novation and cash settlement of RFQ trades |
-| Ex8:MD / Ex8:VFeeds | Consumer-facing market-data distribution of tape/stream content |
+| Exchange8:Gateway | Client and LP FIX 4.4 / WebSocket session transports and authentication of connections |
+| Exchange8:RefData | Security master and currency catalog (security → FX pair extension; currencies) |
+| Exchange8:Risk | Currency/tenor limit policy and the 21-check risk matrix applied to RFQ-initiated flows |
+| Exchange8:ME | The CLOB serving model for pairs traded on the order book |
+| Exchange8:Clearing / Settlement / Bank8:Ledger | Position, novation and cash settlement of RFQ trades |
+| Exchange8:MD / Exchange8:VFeeds | Consumer-facing market-data distribution of tape/stream content |
 | Sentin8:Auth | Identity, user and M2M tokens (cert-bound, DCR-registered per workload) |
 | Sentin8:Bus | Durable delivery of RFQ lifecycle events (outbox → produce) |
 | MemBus (Valkey) | Newest-wins streaming quote and tape publication |

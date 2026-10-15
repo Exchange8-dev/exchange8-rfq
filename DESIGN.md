@@ -1,4 +1,4 @@
-# DESIGN.md: Ex8:RFQ — Detailed Design Document
+# DESIGN.md: Exchange8:RFQ — Detailed Design Document
 
 ## 1. Scope & Context
 
@@ -21,17 +21,17 @@
 
 **Does NOT own (delegates)**
 
-- The CLOB order book for FX pairs traded as limit orders — Ex8:ME
+- The CLOB order book for FX pairs traded as limit orders — Exchange8:ME
   (pairs with `quote_type ∈ {clob, clob+rfq}` are served there).
 - Client/LP FIX 4.4 and WebSocket session transports and FIX codec —
-  Ex8:Gateway (sessions are connections; the engine consumes their events).
-- The currency-exposure **limit policy decisions** — Ex8:Risk (this service
+  Exchange8:Gateway (sessions are connections; the engine consumes their events).
+- The currency-exposure **limit policy decisions** — Exchange8:Risk (this service
   records net position per currency/value date; limit evaluation is Risk's).
 - Position ledger, novation and settlement of FX trades —
-  Ex8:Clearing / Ex8:Settlement / Bank8:Ledger.
-- Instrument security master, currency catalog — Ex8:RefData
+  Exchange8:Clearing / Exchange8:Settlement / Bank8:Ledger.
+- Instrument security master, currency catalog — Exchange8:RefData
   (`refdata.security`, `refdata.currency`; read via declared grants).
-- Public market-data fan-out — Ex8:MD / Ex8:VFeeds (the tape is published
+- Public market-data fan-out — Exchange8:MD / Exchange8:VFeeds (the tape is published
   by RFQ; consumer-facing feeds are theirs).
 - Identity, M2M registration, Cron schedules — Sentin8:Auth / Sentin8:Cron.
 
@@ -45,11 +45,11 @@ graph TD
     end
 
     subgraph vertical["exchange8 vertical (db exchange8)"]
-        GATEWAY["Ex8:Gateway (sessions)"]
-        REFQ["Ex8:RefData (security / currency)"]
-        RISK["Ex8:Risk (limits)"]
-        MDQ["Ex8:MD / Ex8:VFeeds (feeds)"]
-        MEQ["Ex8:ME (CLOB pairs)"]
+        GATEWAY["Exchange8:Gateway (sessions)"]
+        REFQ["Exchange8:RefData (security / currency)"]
+        RISK["Exchange8:Risk (limits)"]
+        MDQ["Exchange8:MD / Exchange8:VFeeds (feeds)"]
+        MEQ["Exchange8:ME (CLOB pairs)"]
     end
 
     subgraph platform["Sentin8 platform"]
@@ -60,7 +60,7 @@ graph TD
         PROXYQ["Sentin8:Proxy (single ingress)"]
     end
 
-    SVC["Ex8:RFQ<br/>exchange8-rfq"]
+    SVC["Exchange8:RFQ<br/>exchange8-rfq"]
 
     CLIENT -->|"RFQ / quotes / hits via session protocol"| GATEWAY
     LPS -->|"quote + stream sessions"| GATEWAY
@@ -492,7 +492,7 @@ sequenceDiagram
 ## 5. Cross-Cutting Concerns
 
 - **Authentication** — Sentin8:Auth is the only issuer. Session participants
-  (clients, LPs) authenticate to Ex8:Gateway and act through connections;
+  (clients, LPs) authenticate to Exchange8:Gateway and act through connections;
   service workloads use cert-bound M2M `client_credentials` tokens
   (DCR-registered per workload: `exchange8:rfq` and `rfq` (the service's own
   client), `exchange8:rfq-policy` / `rfq-policy` (Shield hot-reload +
@@ -774,10 +774,10 @@ graph TD
 - The tape SSE publisher surface and session-entitlement model for
   streaming quotes (`exchange8:rfq:stream:read` consumers) — the endpoint
   contract for RFQ is not fixed yet.
-- The `rfq.currency_exposure` update path and the interplay with Ex8:Risk's
+- The `rfq.currency_exposure` update path and the interplay with Exchange8:Risk's
   per-currency limit decisions (who shifts net positions, when) is a
   risk-design decision; only the table and limit columns exist today.
-- Pair `quote_type` routing between Ex8:ME (CLOB) and this engine per
+- Pair `quote_type` routing between Exchange8:ME (CLOB) and this engine per
   `fx_pair.quote_type` is designed at the vertical level but not resolved
   in a runtime router here.
 - Forward tenor pricing (value-date derivation from `fx_tenor.days` +
