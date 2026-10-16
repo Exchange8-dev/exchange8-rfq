@@ -2,7 +2,11 @@
   "vertical": "exchange8",
   "services": [
     {
-      "service_type": "exchange8:rfq"
+      "service_type": "exchange8:rfq",
+      "telemetry_property": {
+        "slug": "rfq",
+        "name": "Exchange8:RFQ Telemetry"
+      }
     }
   ]
 }

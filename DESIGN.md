@@ -116,7 +116,6 @@ printing (`registration::print`), state wiring that connects the MemBus
 (`sentin8::membus::ServiceBus::connect("exchange8:rfq", valkey_url)`), and
 `with_router(extend_router)` that mounts the Shield policy-admin API over
 the shared `HasPolicyAdmin` accessor so the admin surface and the request
-path evaluate the **same** policy cache. The global allocator is mimalloc,
 covering every in-process task. Boot, DB pool, drain, outbox relay and audit
 pusher are shell-provided.
 
@@ -539,7 +538,6 @@ sequenceDiagram
   `exchange8-rfq-tls` workload resolves host context DB-free via
   `GET /v1/resolve/hostname` (`sentin8:sys:instances:read`). Post-quantum
   only; no classical fallback.
-- **Allocator** — mimalloc global allocator covers HTTP, session drivers,
   relay, journal pusher and the sweep timer alike.
 
 ## 6. Failure Modes & Recovery

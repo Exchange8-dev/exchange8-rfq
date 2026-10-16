@@ -12,7 +12,6 @@ two-way prices continuously; a hit binds the newest still-valid,
 non-withdrawn quote), projects an **anonymized public tape** of RFQ
 activity, and maintains the per-LP **last-look scorecard**. It is a Rust
 axum binary built on the platform `sentin8::shell` crate (Sentin8 Shell):
-registration, DB pool, health endpoint, Shield policy-admin mount, mimalloc
 global allocator, graceful drain.
 
 ## 2. Motivation
@@ -77,7 +76,6 @@ graph TD
     end
 
     subgraph platform["Sentin8 platform"]
-        SHELL["sentin8::shell<br/>DB pool, drain, mimalloc"]
         AUTH["Sentin8:Auth (issuer, M2M DCR)"]
         MBC["MemBus (Valkey, newest-wins)"]
         BUS["Sentin8:Bus POST /v1/produce"]
