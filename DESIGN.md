@@ -228,7 +228,7 @@ sequenceDiagram
         L->>S: last-look answer
         alt accept (even past deadline — asymmetric)
             S->>E: on_last_look_ok(rfq_id, now)
-            E-->>S: Traded — binds at quoted price; late accept counted on scorecard
+            E-->>S: Traded — binds at quoted price, late accept counted on scorecard
         else reject inside window
             S->>E: on_last_look_reject(rfq_id, reason)
             E-->>S: Rejected{reason} — RFQ → rejected, counter row
@@ -256,7 +256,7 @@ sequenceDiagram
         H->>DB: query under RLS transaction context
         H-->>A: policy set / relation / attribute rows
     end
-    Note over A,DB: RFW pages rfqs · pairs · lp-sessions are registered;<br/>their UI/data handlers ride the runtime wiring pass (DESIGN §10)
+    Note over A,DB: RFW pages rfqs · pairs · lp-sessions are registered,<br/>their UI/data handlers ride the runtime wiring pass (DESIGN §10)
 ```
 
 ## 3. Data Model
@@ -590,13 +590,13 @@ sequenceDiagram
 
     W->>DB: BEGIN — RFQ state + quotes + outbox + audit rows
     W->>W: CRASH before relay (tx COMMITTED)
-    Note over DB: RFQ state durable; outbox unrelayed; audit unpushed
+    Note over W,SW: RFQ state durable, outbox unrelayed, audit unpushed
     R->>DB: boot: SELECT unrelayed outbox
     R->>DB: POST /v1/produce (idempotency_key = row id)
     Note over R: Bus dedupes → no duplicate consumer work
     R->>DB: relayed = true
-    SW->>DB: sweep: RFQs past window + grace → Expired;<br/>pending last-look hits past deadline bind at quote
-    Note over SW: engine restart ⇒ Open/Quoting RFQs expire;<br/>stream books re-sync from LP pushes
+    SW->>DB: sweep: RFQs past window + grace → Expired,<br/>pending last-look hits past deadline bind at quote
+    Note over W,SW: engine restart ⇒ Open/Quoting RFQs expire,<br/>stream books re-sync from LP pushes
 ```
 
 | Failure | Behavior |
