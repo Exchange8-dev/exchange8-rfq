@@ -1,4 +1,4 @@
-# DESIGN.md: Exchange8:RFQ — Detailed Design Document
+# Exchange8:RFQ — Detailed Design Document
 
 ## 1. Scope & Context
 
