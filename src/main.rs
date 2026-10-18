@@ -17,6 +17,7 @@
 mod conformance;
 mod engine;
 mod registration;
+mod openapi;
 mod tape;
 
 use std::sync::Arc;
