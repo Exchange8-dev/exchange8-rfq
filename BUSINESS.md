@@ -1,4 +1,4 @@
-# Exchange8:RFQ — Business Requirements & Functionality
+# Exchange8:RFQ - Business Requirements & Functionality
 
 > Audience: product owners, business analysts, and anyone evaluating what
 > Exchange8:RFQ **does for the business**. For architecture read `README.md`;
@@ -11,11 +11,11 @@
   from all eligible liquidity providers at once, compares two-way quotes,
   and deals with the one it chooses.
 - Guarantee **market integrity in the window game**: every RFQ operates
-  under bounded, venue-authoritative timing — a quote window, per-quote
-  validity, and a bounded LP last look — so neither side can bank on unfair
+  under bounded, venue-authoritative timing - a quote window, per-quote
+  validity, and a bounded LP last look - so neither side can bank on unfair
   timing.
 - Protect the client's price certainty: once a hit is accepted, the deal
-  prints **at the quoted price** — the client can never be repriced by an
+  prints **at the quoted price** - the client can never be repriced by an
   LP's hesitation.
 - Publish an **anonymized tape** of RFQ activity so the market can see
   liquidity flow without exposing who quoted what to whom (anti
@@ -26,8 +26,8 @@
 - Serve pairs by model: the venue routes FX between the central-limit
   order book and this quote-driven engine per pair, so liquidity providers
   participate where their model fits.
-- Hold the **FX pair knowledge** the venue operates on — pip sizes, big
-  figures, settlement conventions, NDF flags, tenors and per-pair cutoffs —
+- Hold the **FX pair knowledge** the venue operates on - pip sizes, big
+  figures, settlement conventions, NDF flags, tenors and per-pair cutoffs -
   as first-class reference data for the FX model.
 
 ## 2. Business Scope (What the Service Provides)
@@ -39,7 +39,7 @@
 | 3 | Hit & deal binding | The client hits one quote at exactly the shown price; hits outside validity expire the RFQ |
 | 4 | Last look | Bounded per-LP accept/reject windows; rejected hits print the reason and count for scorecards; late accepts still fill at the quote |
 | 5 | Streaming quotes | LPs push two-way prices continuously per pair; a hit binds the newest valid, non-withdrawn quote |
-| 6 | Anonymized tape | Public RFQ tape: pair, two-way price, dealt size — no LP/client identity, no one-sided quotes |
+| 6 | Anonymized tape | Public RFQ tape: pair, two-way price, dealt size - no LP/client identity, no one-sided quotes |
 | 7 | LP scorecards | Per-LP counters (hits parked, accepts, rejects by reason, late accepts) with a derived reject rate |
 | 8 | FX pair & tenor master | Pair metadata on top of the security master: pip size, big figure, settlement (T+0/T+1/T+2), NDF flag, serving model per pair, cutoff; tenor catalog (SP, 1W..12M) with value-date rules |
 | 9 | Currency exposure records | Net position and limit per currency (with value-date buckets for forwards) |
@@ -71,7 +71,7 @@
 | Quote window | Responses are accepted only inside the RFQ's window (default 500 ms); a late response is recorded for audit and is invisible to the client |
 | Two-way pricing | LPs respond with a two-way (or one-sided) quoted price at size; the venue never re-prices or re-scales an LP's price |
 | Quoted price certainty | The client deals only at a price actually shown; the venue rejects deal attempts at any other level |
-| Hit validity | Each quote carries its own valid-until; a hit past validity expires the RFQ — the price is pulled |
+| Hit validity | Each quote carries its own valid-until; a hit past validity expires the RFQ - the price is pulled |
 | Last look | An LP may exercise a bounded last look: an accept binds the trade at the quoted price (even a late accept); a reject within the window declines the deal and is recorded with its reason |
 | Lifecycle finality | Every RFQ ends in exactly one of traded / expired / rejected, recorded with its terminal state and (when traded) the winning LP |
 
@@ -82,14 +82,14 @@
 | Continuous availability | Entitled LPs may serve pairs by continuously streaming two-way prices, no RFQ required |
 | Newest binds | A streaming hit binds the LP's latest still-valid quote; a newer push automatically supersedes the previous one |
 | Withdrawal | An LP's withdrawal takes its quote off immediately; withdrawn quotes can never be hit |
-| Public tape | The venue publishes an anonymized record of RFQ broadcasts, quoted prices, trades and expiries — pairs and prices only |
+| Public tape | The venue publishes an anonymized record of RFQ broadcasts, quoted prices, trades and expiries - pairs and prices only |
 | No intent leakage | The tape shows the RFQ's size but not its side, and never shows which LP quoted which price or which client dealt |
 
 ### LP behaviour management
 
 | Capability | Business rule |
 |---|---|
-| Scorecards | Each LP's response behaviour — quotes sent, deals accepted, deals rejected by reason, late answers — is measured continuously |
+| Scorecards | Each LP's response behaviour - quotes sent, deals accepted, deals rejected by reason, late answers - is measured continuously |
 | Reject accountability | Every last-look rejection is persisted with its reason and attributed to the LP |
 | Late-answer accountability | An LP that answers last look after its own deadline still must fill at the quoted price; the lateness is counted |
 | Entitlement review inputs | Reject rates per LP are the business input for keeping or withdrawing RFQ/streaming entitlement |
@@ -101,7 +101,7 @@
 | Pair model | Every pair is defined with base/quote currency, pip size, big-figure digits, settlement convention (T+0/T+1/T+2), NDF flag, serving model (`clob` / `rfq` / `stream` / `clob+rfq`) and optional trading cutoff |
 | Tenor model | Spot (`SP`) and forward tenors (1W..12M) with calendar-day offsets and a value-date rule |
 | Currency exposure | The venue tracks its net signed position per currency (bucketed by value date for forwards) with an optional exposure limit (0 = unlimited) |
-| Pair uniqueness | One pair definition per environment per currency pair — no duplicate instrument definitions |
+| Pair uniqueness | One pair definition per environment per currency pair - no duplicate instrument definitions |
 
 ## 4. Business Events (Outbound)
 
@@ -112,7 +112,7 @@
 | `rfq:traded` | A client hit has bound at the quoted price (RFQ deal or streaming deal) |
 | `rfq:expired` | The quote window elapsed without answers, or the hit's validity passed |
 | `rfq:rejected` | An LP exercised last look and declined the deal (reason attached) |
-| `rfq:late quote` (audit) | A quote arrived after the window — audit-only, never client-visible |
+| `rfq:late quote` (audit) | A quote arrived after the window - audit-only, never client-visible |
 | `stream:quote` / `stream:withdrawn` | An LP pushed or pulled its streaming two-way price |
 
 MemBus (newest-wins, session-private) families: `rfq.quote` for live LP
@@ -126,7 +126,7 @@ standard shell consumers.
 
 ## 5. Business Rules & Invariants
 
-1. Every RFQ request routes to **all** entitled LPs simultaneously —
+1. Every RFQ request routes to **all** entitled LPs simultaneously -
    selective or sequential routing is not permitted by design.
 2. Engine receive time decides all windows; supplier-declared timestamps
    are never authoritative.
@@ -135,16 +135,16 @@ standard shell consumers.
    input.
 4. An LP's quoted validity is capped by the venue; no quote can carry
    unbounded validity.
-5. The client can deal only at a price the engine showed for that leg —
+5. The client can deal only at a price the engine showed for that leg -
    invented, edited or stale prices never bind.
 6. A deal past a quote's validity expires the RFQ; the quote is pulled.
-7. Last look is bounded and asymmetric: an accept — even a late one — fills
+7. Last look is bounded and asymmetric: an accept - even a late one - fills
    at the quoted price; a reject within the window declines the deal and is
    measured. Reject reasons are always known and recorded.
 8. A streaming hit binds the LP's **newest** valid, non-withdrawn quote;
    withdrawn or expired quotes bind nothing, and a one-sided quote cannot
    serve the missing leg.
-9. RFQ trades and streaming trades share one trade-id sequence — the
+9. RFQ trades and streaming trades share one trade-id sequence - the
    business trade count is venue-complete.
 10. The public tape never identifies an LP, a client or a one-sided quote,
     and never reveals the dealt side of a broadcast.
@@ -174,7 +174,7 @@ standard shell consumers.
 - **Late-quote containment**: zero late quotes presented to clients or
   bound in a trade since this behaviour is structurally enforced.
 - **Price certainty**: accepted and past-deadline last-look accepts fill at
-  the quoted price — zero trades printed off-quote.
+  the quoted price - zero trades printed off-quote.
 - **Window discipline**: RFQs expire within their window plus bound grace
   (sweep); expired RFQs produce exactly one `rfq:expired` event each.
 - **LP accountability**: every last-look rejection (with reason) and every
@@ -182,7 +182,7 @@ standard shell consumers.
   reject rate.
 - **Tape integrity**: zero identity-bearing fields on the public tape;
   one-sided and identity-bearing events structurally excluded.
-- **Reliability**: no RFQ state change lost — outbox + journal ride the
+- **Reliability**: no RFQ state change lost - outbox + journal ride the
   same transaction; Bus/Sys outages degrade delivery, never lose records.
 - **Latency**: quote ingest and hit decisions are in-memory engine
   operations (sub-millisecond core path); persistence is per transition.
@@ -224,7 +224,7 @@ standard shell consumers.
    withdrawal and expiry take effect for subsequent hits immediately.
 8. Streaming deals obtain trade ids from the same sequence as RFQ deals and
    are printed with no RFQ reference.
-9. The tape contains only pair, two-way price, size and deal prints — a
+9. The tape contains only pair, two-way price, size and deal prints - a
    serialized tape entry is provably free of LP and client identity.
 10. Every RFQ transition is persisted with its outbox and audit rows in one
     transaction and survives a relay or audit-outage retry losslessly.

@@ -3,12 +3,12 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:RFQ
 // SPDX-License-Identifier: Apache-2.0
 
-//! Exchange8:RFQ service binary — FX quote-driven trading (FX design §3.2).
+//! Exchange8:RFQ service binary - FX quote-driven trading (FX design §3.2).
 //!
 //! Hosts the RFQ engine (`engine.rs`): client RFQs, LP quotes, last look,
 //! streaming quotes. The engine is the deterministic core; this shell
 //! wires health/registration/admin via the platform `sentin8-shell` crate
-//! (see DESIGN.md §2, §10 — session wiring status).
+//! (see DESIGN.md §2, §10 - session wiring status).
 
 #![allow(dead_code)]
 
@@ -26,7 +26,7 @@ use std::sync::Arc;
 ///
 /// RFQ is a pub/sub-class publisher: `rfq.quote` (streaming LP quotes,
 /// private to entitled sessions) and `rfq.event`
-/// (anonymized tape events) — newest-wins families (see DESIGN.md §4).
+/// (anonymized tape events) - newest-wins families (see DESIGN.md §4).
 pub struct RfqState {
     pub core: sentin8::shell::ServiceCore,
     pub membus: sentin8::membus::ServiceBus,
@@ -41,7 +41,7 @@ fn extend_router(
     // with the RFW/handler pass like the sibling services.
 
     app
-        // ── Sentin8:Policy admin API — shared implementation;
+        // ── Sentin8:Policy admin API - shared implementation;
         // handlers generic over this state via the HasPolicyAdmin impl below;
         // axum 0.8 cannot merge a bound Router<()> into Router<std::sync::Arc<RfqState>>).
         .route(

@@ -3,7 +3,7 @@
 ## 1. Summary
 
 Exchange8:RFQ is the **quote-driven trading** service of the exchange8 vertical: the
-Request-For-Quote engine for FX — clients broadcast an RFQ (pair, side, qty,
+Request-For-Quote engine for FX - clients broadcast an RFQ (pair, side, qty,
 tenor), all entitled liquidity providers (LPs) respond with two-way prices
 inside a bounded quote window, the client hits one quote, and the LP's
 **last look** may accept or reject inside its own bounded window. Beyond the
@@ -20,20 +20,20 @@ global allocator, graceful drain.
   (served by Exchange8:ME) and **bilateral quote-driven dealing** at large or
   illiquid sizes. The RFQ model needs an engine with fundamentally different
   timing semantics: response windows measured in hundreds of milliseconds,
-  per-quote validity, and per-LP last look — none of which fit a price-time
+  per-quote validity, and per-LP last look - none of which fit a price-time
   order book.
 - **Fair routing** is a market-integrity requirement: the request fans out to
   all entitled LPs at once; no LP may see the request earlier. Engine receive
   timestamps (not LP-supplied ones) are authoritative.
-- **Late quotes must never bind** — a response arriving after the quote
+- **Late quotes must never bind** - a response arriving after the quote
   window is recorded for audit but is never shown to the client and never
   wins. This keeps the client's view honest under asynchronous LP load.
 - **Last look** is asymmetric by market convention: an LP may reject the
   deal inside its bounded window (the client's hit dies with `rfq:rejected`),
-  but an LP that accepts late still fills at the quoted price — the venue
+  but an LP that accepts late still fills at the quoted price - the venue
   counts and measures both behaviors rather than ignoring them.
 - **RFQ liquidity is sensitive information.** A public feed of raw events
-  would leak which LP quoted which price to which client — the tape is an
+  would leak which LP quoted which price to which client - the tape is an
   anonymized projection: pair, two-way price, dealt size; no identities,
   no one-sided quotes.
 - LP quote behaviour needs **measurement to be governable**: quotes sent,
@@ -48,7 +48,7 @@ The service is a Sentin8 Shell binary (`exchange8:rfq`, DSN prefix
 MemBus (`sentin8::membus::ServiceBus`, Valkey-backed, newest-wins): family
 `rfq.quote` for streaming LP quotes (private to entitled sessions) and
 family `rfq.event` for the anonymized tape. The domain logic lives in a
-**pure engine** — the clock is injected, the shell owns all sockets and
+**pure engine** - the clock is injected, the shell owns all sockets and
 transport; this separation is what makes the conformance suite and unit
 tests deterministic.
 
@@ -117,44 +117,44 @@ SELECT-only cross-schema grants to `refdata.security` and `refdata.currency`.
 
 ## 4. Key Traits and Data Structures
 
-Pure concepts — how the model fits together (no signatures):
+Pure concepts - how the model fits together (no signatures):
 
-- **RFQ lifecycle** — a state machine
+- **RFQ lifecycle** - a state machine
   `Open → Quoting → Quoted → Traded | Expired | Rejected`. A request with no
   entitled LP expires immediately; a quote lifts the RFQ to `Quoted`; the
   client's hit transitions to `Traded`; a window without answers expires; a
   last-look reject terminates in `Rejected`. Each RFQ carries its quote
   window (default 500 ms), its accumulated LP quotes and its winning LP.
-- **Quote collection (`LpQuote`)** — each LP response records the two-way
+- **Quote collection (`LpQuote`)** - each LP response records the two-way
   price, size, the LP-declared validity (capped by the engine on ingest) and
   the **engine receive time**. The `late` flag is authoritative for
   visibility: late quotes are recorded, surfaced as audit-only events and
   never shown to the client or marked as winners.
-- **Fair routing** — on request the engine expands the entitled LP set
+- **Fair routing** - on request the engine expands the entitled LP set
   (`rfq_provider` LPs whose pair entitlement covers the RFQ's pair) and
   emits one broadcast event routing to all of them simultaneously; per-LP
   config (`LpConfig`) also carries the last-look window and streaming
   capability.
-- **Hit binding** — a hit names an LP and a deal price. The engine binds the
+- **Hit binding** - a hit names an LP and a deal price. The engine binds the
   LP's newest non-late quote, resolves the dealt leg from the client's side
   (buy → LP ask, sell → LP bid) and requires the hit price to equal it
   exactly; a hit past the quote's validity expires the RFQ. Prices are never
-  invented or averaged — the deal happens at the quoted level.
-- **Last look (`PendingHit`)** — when the hit LP has a last-look window the
+  invented or averaged - the deal happens at the quoted level.
+- **Last look (`PendingHit`)** - when the hit LP has a last-look window the
   hit is parked with a deadline. An accept (even **late**, past the LP's
   deadline) trades at the quoted price and is flagged for the scorecard; a
   reject inside the window produces `rfq:rejected`, no trade, and a
   per-(LP, reason) counter row. The sweep binds pending hits whose deadline
   passed without an answer.
-- **Streaming quotes (`StreamQuote`)** — a per-(LP, pair) live book where a
+- **Streaming quotes (`StreamQuote`)** - a per-(LP, pair) live book where a
   new push replaces the previous quote (**newest binds**); withdrawal marks
   the quote dead. A streaming hit reuses the same trade-id source and emits
   the trade event with `rfq_id = 0` (no RFQ behind it).
-- **Tape (`RfqTape`)** — an append-only anonymized projection: sequence,
+- **Tape (`RfqTape`)** - an append-only anonymized projection: sequence,
   engine timestamp, and one of `RfqBroadcast` (pair + size, deliberately no
   side), `QuoteLanded` (two-way only), `Traded`, `Expired`. Rejections,
   late quotes and one-sided quotes are **not tapeable**.
-- **Last-look analytics (`LastLookAnalytics`)** — per-LP counters
+- **Last-look analytics (`LastLookAnalytics`)** - per-LP counters
   (hits parked, accepts, rejects by reason, late accepts) with a derived
   reject rate, sorted deterministically for snapshotting.
 
@@ -169,7 +169,7 @@ Pure concepts — how the model fits together (no signatures):
 - **Engine receive-time authority** over trusting LP timestamps: LP-supplied
   times are advisory (client-side clock skew is a fairness attack); the
   engine stamps `received_us` on ingest. The cost is trusting the engine's
-  single clock — accepted, because the engine is the serialization point.
+  single clock - accepted, because the engine is the serialization point.
 - **Anonymized tape projection** over publishing raw lifecycle events:
   raw events carry LP identity and reject reasons, which enable
   front-running and quote sniping. The projection drops identity-bearing or
@@ -198,7 +198,7 @@ Pure concepts — how the model fits together (no signatures):
 
 - The engine is a single in-memory state machine (`rfqs`, `lps`, `streams`,
   `pending_hits`, `reject_counters`); events accumulate in an internal log
-  the shell drains (`take_events`). No tokio primitives inside the core —
+  the shell drains (`take_events`). No tokio primitives inside the core -
   the shell turns events into bus/membus/DB writes.
 - **Sweep** (`sweep(now_us)`) expires RFQs still in
   `Open`/`Quoting` past their quote window plus a 100 ms grace
@@ -207,12 +207,12 @@ Pure concepts — how the model fits together (no signatures):
   time; the engine trusts the caller-set `late` flag, records the quote
   anyway, and enforces non-visibility and non-binding for it.
 - LP-declared quote validity is bounded at ingest to the engine receipt
-  time plus `MAX_VALID_WINDOW_US` (5 s) — an LP cannot park an indefinite
+  time plus `MAX_VALID_WINDOW_US` (5 s) - an LP cannot park an indefinite
   validity to snipe later hits.
 - On trade, every non-winning quote of the RFQ is flagged (persisted as
   `winning = false` on the quote rows); winning-quote attribution is
   preserved per RFQ.
-- Hit price matching is **exact equality** with the quote's deal leg — there
+- Hit price matching is **exact equality** with the quote's deal leg - there
   is no tolerance band, because a mismatch is either a stale or an edited
   price and both are market abuse vectors.
 - Invariants (verified by the unit tests and the conformance module):
@@ -237,7 +237,7 @@ Pure concepts — how the model fits together (no signatures):
 ## 7. Unresolved Questions / Future Designs
 
 - The FIX 4.4 QuoteReq/WS session transports, the bus consumers/members and
-  the sweep timer are not wired in this binary yet — the HTTP router carries
+  the sweep timer are not wired in this binary yet - the HTTP router carries
   health + Shield policy admin only, and no domain handler mounts exist.
   Runtime wiring lands with the router/handler pass mirroring the sibling
   services.
@@ -247,7 +247,7 @@ Pure concepts — how the model fits together (no signatures):
 - `rfq.outbox` emission from the engine (event types per lifecycle event +
   stream families) is designed by the DBX pattern but not yet written by
   any handler path.
-- `rfq_id`/trade-id batch leases from the platform sequence facility — the
+- `rfq_id`/trade-id batch leases from the platform sequence facility - the
   engine takes injected counters today; the lease-at-startup wiring is the
   vertical id-substrate pattern (data-model design §2a) and lands with the
   runtime wiring.
@@ -257,7 +257,7 @@ Pure concepts — how the model fits together (no signatures):
 - The tape SSE publisher surface (session-entitled consumers) and the
   client-visible quote stream API ride the MD/VFeeds surface design; their
   exact endpoint contract for RFQ is not fixed.
-- Pair `quote_type` routing (`clob` / `rfq` / `stream` / `clob+rfq`) — the
+- Pair `quote_type` routing (`clob` / `rfq` / `stream` / `clob+rfq`) - the
   engine is pair-agnostic today; the router that splits client flows between
   Exchange8:ME (CLOB) and this engine per pair is outstanding.
 

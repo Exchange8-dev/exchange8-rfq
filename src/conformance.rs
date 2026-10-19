@@ -5,7 +5,7 @@
 
 //! RFQ engine conformance scenarios (DESIGN.md §9).
 //!
-//! The RFQ lifecycle rules that every deployment must honor — quote
+//! The RFQ lifecycle rules that every deployment must honor - quote
 //! windows, late quotes, last-look binding, last-look rejects, and
 //! streaming quote binding (design reference:
 //! `design/sentin8-exchange8-fx-technical-design.md` §3.2). Each scenario drives the real [`RfqEngine`] through
@@ -97,21 +97,21 @@ fn quote(lp: &str, bid: f64, ask: f64, valid_until: u64, late: bool) -> LpQuote 
 // Scenarios
 // ---------------------------------------------------------------------------
 
-/// SCEN 1 — quote window: an RFQ left unanswered past window + grace
+/// SCEN 1 - quote window: an RFQ left unanswered past window + grace
 /// expires on sweep and emits `Expired`.
 pub fn scen_quote_window_expiry() -> (String, bool) {
     let mut s = Scenario::new("quote_window_expiry");
     let mut eng = engine();
     // Routed to the two RFQ providers.
     eng.request(req(1, Side::Buy), s.now_us);
-    // 500 ms window + 100 ms grace — nothing arrives.
+    // 500 ms window + 100 ms grace - nothing arrives.
     let now = s.tick(650_000);
     eng.sweep(now);
     let expired = eng.state(1) == Some(RfqState::Expired);
     (s.name.into(), expired)
 }
 
-/// SCEN 2 — late quotes never bind: a quote flagged late is recorded
+/// SCEN 2 - late quotes never bind: a quote flagged late is recorded
 /// for audit, never shown to the client.
 pub fn scen_late_quote_never_wins() -> (String, bool) {
     let mut s = Scenario::new("late_quote_never_wins");
@@ -133,7 +133,7 @@ pub fn scen_late_quote_never_wins() -> (String, bool) {
     (s.name.into(), late && !quoted)
 }
 
-/// SCEN 3 — last-look binding: the hit parks inside the LP's window
+/// SCEN 3 - last-look binding: the hit parks inside the LP's window
 /// (no trade yet) and trades on `on_last_look_ok`, even when the LP
 /// answers past its deadline (asymmetric late accept still binds).
 pub fn scen_last_look_binding() -> (String, bool) {
@@ -150,7 +150,7 @@ pub fn scen_last_look_binding() -> (String, bool) {
         deal_price: 1.0846,
         ts_us: hit_at,
     });
-    // Nothing traded yet — parked for last look.
+    // Nothing traded yet - parked for last look.
     let already = mid.iter().any(|e| matches!(e, RfqEvent::Traded { .. }));
     // LP answers past its 200 ms deadline (asymmetric late accept).
     let late_at = s.tick(300_000);
@@ -161,7 +161,7 @@ pub fn scen_last_look_binding() -> (String, bool) {
     (s.name.into(), !already && traded)
 }
 
-/// SCEN 4 — last-look reject: the client's hit dies when the LP
+/// SCEN 4 - last-look reject: the client's hit dies when the LP
 /// rejects inside the window.
 pub fn scen_last_look_reject() -> (String, bool) {
     let mut s = Scenario::new("last_look_reject");
@@ -183,7 +183,7 @@ pub fn scen_last_look_reject() -> (String, bool) {
     (s.name.into(), rejected)
 }
 
-/// SCEN 5 — streaming: the newest non-withdrawn valid stream quote
+/// SCEN 5 - streaming: the newest non-withdrawn valid stream quote
 /// binds at the hit; a withdrawn quote cannot be hit.
 pub fn scen_stream_binding() -> (String, bool) {
     let mut s = Scenario::new("stream_binding");

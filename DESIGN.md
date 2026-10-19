@@ -1,18 +1,18 @@
-# Exchange8:RFQ — Detailed Design Document
+# Exchange8:RFQ - Detailed Design Document
 
 ## 1. Scope & Context
 
 **Owns**
 
-- The RFQ engine — the full RFQ lifecycle
+- The RFQ engine - the full RFQ lifecycle
   `Open → Quoting → Quoted → Traded | Expired | Rejected`: request routing,
   quote collection with windows and lateness, hit binding, last-look
   parking/accept/reject with per-(LP, reason) counters, and the sweep.
-- The streaming-quote side channel — per-(LP, pair) live two-way books,
+- The streaming-quote side channel - per-(LP, pair) live two-way books,
   newest-binds hit semantics, withdrawal.
 - The anonymized RFQ tape (`RfqTape`) and the last-look analytics
   scorecard (`LastLookAnalytics`).
-- FX pair/tenor master extension (`rfq.fx_pair`, `rfq.fx_tenor`) — the pair
+- FX pair/tenor master extension (`rfq.fx_pair`, `rfq.fx_tenor`) - the pair
   metadata (pip size, big figure, settlement convention, NDF flag,
   `quote_type`, cut-off) that rides on top of `refdata.security`.
 - Per-currency exposure records (`rfq.currency_exposure`).
@@ -21,19 +21,19 @@
 
 **Does NOT own (delegates)**
 
-- The CLOB order book for FX pairs traded as limit orders — Exchange8:ME
+- The CLOB order book for FX pairs traded as limit orders - Exchange8:ME
   (pairs with `quote_type ∈ {clob, clob+rfq}` are served there).
-- Client/LP FIX 4.4 and WebSocket session transports and FIX codec —
+- Client/LP FIX 4.4 and WebSocket session transports and FIX codec -
   Exchange8:Gateway (sessions are connections; the engine consumes their events).
-- The currency-exposure **limit policy decisions** — Exchange8:Risk (this service
+- The currency-exposure **limit policy decisions** - Exchange8:Risk (this service
   records net position per currency/value date; limit evaluation is Risk's).
-- Position ledger, novation and settlement of FX trades —
+- Position ledger, novation and settlement of FX trades -
   Exchange8:Clearing / Exchange8:Settlement / Bank8:Ledger.
-- Instrument security master, currency catalog — Exchange8:RefData
+- Instrument security master, currency catalog - Exchange8:RefData
   (`refdata.security`, `refdata.currency`; read via declared grants).
-- Public market-data fan-out — Exchange8:MD / Exchange8:VFeeds (the tape is published
+- Public market-data fan-out - Exchange8:MD / Exchange8:VFeeds (the tape is published
   by RFQ; consumer-facing feeds are theirs).
-- Identity, M2M registration, Cron schedules — Sentin8:Auth / Sentin8:Cron.
+- Identity, M2M registration, Cron schedules - Sentin8:Auth / Sentin8:Cron.
 
 ### System context
 
@@ -130,7 +130,7 @@ graph TD
         HTTPT["axum HTTP task (TLS, drain)"]
         HEALTHQ["health handler"]
         POLADMQ["Shield policy-admin handlers"]
-        SESST["session drivers (FIX 4.4 / WS) — runtime wiring pass"]
+        SESST["session drivers (FIX 4.4 / WS) - runtime wiring pass"]
         SWEEPT["sweep timer (window + last-look deadlines)"]
         RELAYTQ["outbox relay loop<br/>LISTEN rfq_outbox_changed + poll unrelayed"]
         JOURNALTQ["audit-journal pusher loop<br/>POST /v1/audit"]
@@ -167,11 +167,11 @@ sequenceDiagram
     C->>S: RfqRequest (pair, side B|S, qty, tenor, window)
     S->>E: request(req, now_us)
     alt no entitled LP (entitlement or pair coverage)
-        E-->>S: [Requested{lp_count:0}, Expired] — RFQ born Expired
+        E-->>S: [Requested{lp_count:0}, Expired] - RFQ born Expired
     else entitled LPs exist
-        E-->>S: Requested{lp_count: N} — fan-out to all entitled LPs at once (fair routing)
+        E-->>S: Requested{lp_count: N} - fan-out to all entitled LPs at once (fair routing)
         S->>DB: INSERT rfq.rfq (state = quoting, window)
-        S->>DB: INSERT rfq.outbox (event payload) — same tx
+        S->>DB: INSERT rfq.outbox (event payload) - same tx
         S->>DB: COMMIT (pg_notify rfq_outbox_changed)
         S->>M: publish rfq.event (anonymized RfqBroadcast)
     end
@@ -196,7 +196,7 @@ sequenceDiagram
         E-->>S: LateQuote (audit only)
         Note over E: recorded, never shown, never wins
     else within window
-        E-->>S: Quoted{bid, ask} — state → Quoted
+        E-->>S: Quoted{bid, ask} - state → Quoted
         Note over E: LP validity capped at now_us + 5 s<br/>engine receive time stamped
     end
     S-->>C: non-late quotes only (collect/compare by the client)
@@ -218,20 +218,20 @@ sequenceDiagram
     alt hit price ≠ quoted deal leg (buy→ask, sell→bid)
         E-->>S: no events (stale/edited price ignored)
     else hit past quote valid_until
-        E-->>S: Expired — RFQ → expired
+        E-->>S: Expired - RFQ → expired
     else LP has no last look (last_look_us = 0)
-        E-->>S: Traded{trade_id} — binds at quoted price
-        S->>DB: UPDATE rfq.rfq (traded, trade_id) + quotes winning flag + outbox — same tx
+        E-->>S: Traded{trade_id} - binds at quoted price
+        S->>DB: UPDATE rfq.rfq (traded, trade_id) + quotes winning flag + outbox - same tx
     else LP has last look
         E-->>S: parked PendingHit (deadline = hit + last_look_us)
         L->>S: last-look answer
-        alt accept (even past deadline — asymmetric)
+        alt accept (even past deadline - asymmetric)
             S->>E: on_last_look_ok(rfq_id, now)
-            E-->>S: Traded — binds at quoted price, late accept counted on scorecard
+            E-->>S: Traded - binds at quoted price, late accept counted on scorecard
         else reject inside window
             S->>E: on_last_look_reject(rfq_id, reason)
-            E-->>S: Rejected{reason} — RFQ → rejected, counter row
-            S->>DB: INSERT rfq.rfq_reject — audited, never tapeable
+            E-->>S: Rejected{reason} - RFQ → rejected, counter row
+            S->>DB: INSERT rfq.rfq_reject - audited, never tapeable
         end
     end
 ```
@@ -418,7 +418,7 @@ as the engine's `pending_hits` set) until accept, reject or deadline sweep.
 ## 4. API Surface
 
 Grouped by audience. The authorization gate for every handler surface is the
-8-step platform pipeline — bearer verify → tenant resolve → feature gate →
+8-step platform pipeline - bearer verify → tenant resolve → feature gate →
 **Shield (`scope-mirror`, enforced, action `exchange8:rfq:quote`)** → RLS
 context → execute → audit. The HTTP router mounts `GET /v1/health`,
 `/openapi.json` and the Shield policy-admin API only; the RFQ flow arrives
@@ -431,10 +431,10 @@ are `exchange8_rfq_not_found` (404), `exchange8_rfq_quote_late` (422) and
 | Client session (FIX 4.4 QuoteReq / WS) | RFQ request, quote responses, hit, streaming quote view | `exchange8:rfq:quote` (scope-mirror) + pair entitlement | `exchange8:rfq:rfq:*` lifecycle events |
 | LP session | Quote responses, last look, streaming pushes/withdraws | `exchange8:rfq:quote` + LP entitlement | `exchange8:rfq:quote:*`, `exchange8:rfq:stream:*` |
 | Market data (entitled feeds) | Anonymized tape (MemBus family `rfq.event`, newest-wins) | session entitlement; `exchange8:rfq:stream:read` | tape entries (no identities) |
-| LP scorecard (admin) | Last-look analytics snapshot | `exchange8:rfq:rfq:read` | — |
-| Admin (RFW) | Pages `rfqs`, `pairs`, `lp-sessions` (`/v1/admin/ui/{page}` + `POST /v1/admin/{resource}`) | `exchange8:rfq:rfq:read` / `:write` / `exchange8:fx:pairs:admin` | — |
+| LP scorecard (admin) | Last-look analytics snapshot | `exchange8:rfq:rfq:read` | - |
+| Admin (RFW) | Pages `rfqs`, `pairs`, `lp-sessions` (`/v1/admin/ui/{page}` + `POST /v1/admin/{resource}`) | `exchange8:rfq:rfq:read` / `:write` / `exchange8:fx:pairs:admin` | - |
 | Admin | Shield policy-admin API (`exchange8:rfq:policy:read` / `:write`, role `exchange8:rfq:admin`) | scope-mirror + admin scopes | `sentin8:sys:policy` family |
-| Ops | `GET /v1/health`, `/openapi.json` | unauthenticated (health) | — |
+| Ops | `GET /v1/health`, `/openapi.json` | unauthenticated (health) | - |
 
 Declared admin scopes (runtime-registered via `vertical enroll`): role
 `exchange8:admin` → `exchange8:rfq:rfq:read`, `exchange8:rfq:rfq:write`,
@@ -459,9 +459,9 @@ sequenceDiagram
     participant B as Sentin8:Bus
     participant T as Trigger (owner service session driver / analytics)
 
-    W->>DB: BEGIN — domain INSERT/UPDATE + rfq_quote / rfq_reject
+    W->>DB: BEGIN - domain INSERT/UPDATE + rfq_quote / rfq_reject
     W->>DB: INSERT rfq.outbox (payload, idempotency = row id)
-    W->>DB: INSERT rfq.audit_journal — same tx
+    W->>DB: INSERT rfq.audit_journal - same tx
     W->>DB: COMMIT (pg_notify rfq_outbox_changed)
     R->>DB: SELECT unrelayed outbox rows
     R->>B: POST /v1/produce (sentin8:bus:produce)
@@ -485,12 +485,12 @@ sequenceDiagram
     A->>DB: SELECT unpushed audit_journal rows
     A->>S: POST /v1/audit (sentin8:sys:audit:write)
     S-->>A: 200 → mark pushed
-    Note over A,S: Sys outage never drops audit — journal rows retry until pushed
+    Note over A,S: Sys outage never drops audit - journal rows retry until pushed
 ```
 
 ## 5. Cross-Cutting Concerns
 
-- **Authentication** — Sentin8:Auth is the only issuer. Session participants
+- **Authentication** - Sentin8:Auth is the only issuer. Session participants
   (clients, LPs) authenticate to Exchange8:Gateway and act through connections;
   service workloads use cert-bound M2M `client_credentials` tokens
   (DCR-registered per workload: `exchange8:rfq` and `rfq` (the service's own
@@ -499,41 +499,41 @@ sequenceDiagram
   resolve)). DCR is fail-closed: only workloads in
   `sentin8_service_workloads` (seeded by `sentin8-cli vertical enroll`) can
   register.
-- **Authorization** — the `scope-mirror` policy set (`origin='platform'`,
+- **Authorization** - the `scope-mirror` policy set (`origin='platform'`,
   `mode='enforced'`) permits each declared action (handler step-5 target:
   `exchange8:rfq:quote`) for callers holding the matching scope or the
   platform-admin scopes (`sentin8:sys:admin`, `sentin8:sys:org:admin`,
   `sentin8:sys:env:admin`). No-set → deny (fail-closed); shadow is the
   emergency one-UPDATE rollback lever only; M2M `token_tp` never bypasses
   policy; a tenant forbid beats the mirror permit.
-- **Tenant resolution + RLS** — every table has `ENABLE` + `FORCE ROW LEVEL
+- **Tenant resolution + RLS** - every table has `ENABLE` + `FORCE ROW LEVEL
   SECURITY` with policies `sentin8_context_initialized() AND env_id =
   sentin8_current_env_id()`; context is set with
   `SELECT sentin8_set_tenant_context(...)` (`set_config(..., true)`,
-  transaction-local) on the **same connection** as the data statements —
+  transaction-local) on the **same connection** as the data statements -
   the async helper must be awaited. Explicit `env_id = $N` predicates are
   defense-in-depth; RLS is the backstop; role `exchange8_rfq_service`
   carries no `BYPASSRLS`.
-- **Idempotency** — bus produce: `idempotency_key` = outbox row id at
+- **Idempotency** - bus produce: `idempotency_key` = outbox row id at
   `POST /v1/produce`; RFQ identity: UNIQUE `(env_id, rfq_id)` plus the
   in-process engine state (a duplicate quote for a terminal RFQ is dropped,
   a duplicate hit cannot re-trade a `Traded` RFQ); stream quotes are
   newest-wins so replays self-supersede; hit/last-look answers are engine
   transitions, not additive writes.
-- **Rate limiting / bot protection** — ingress tier is the platform edge
+- **Rate limiting / bot protection** - ingress tier is the platform edge
   (Sentin8:Proxy); session-level rate policies ride the Shield policy
   surface (per-tenant sets), not bespoke code.
-- **Audit journaling** — every state transition writes `rfq.audit_journal`
+- **Audit journaling** - every state transition writes `rfq.audit_journal`
   (same transaction where possible); the pusher drains to Sys
   `POST /v1/audit` (`sentin8:sys:audit:write`); a Sys outage retries without
   loss.
-- **Drain** — `sentin8::shell` graceful drain on upgrade: HTTP stops
+- **Drain** - `sentin8::shell` graceful drain on upgrade: HTTP stops
   accepting, in-flight sessions finish, the relay/journal pusher checkpoint
   unrelayed/unpushed rows, and Sentin8:Captain's `upgrade-instance` swaps
   the binary (rolling, zero-downtime). In-flight RFQs are short-lived by
-  nature — an engine restart expires `Open`/`Quoting` RFQs (their lifecycle
+  nature - an engine restart expires `Open`/`Quoting` RFQs (their lifecycle
   is measured in milliseconds) and streaming books re-sync from LP pushes.
-- **TLS** — terminated in-process by `sentin8-tls` behind Sentin8:Proxy
+- **TLS** - terminated in-process by `sentin8-tls` behind Sentin8:Proxy
   (single ingress, SNI `exchange8-rfq.sys.ops…`); the
   `exchange8-rfq-tls` workload resolves host context DB-free via
   `GET /v1/resolve/hostname` (`sentin8:sys:instances:read`). Post-quantum
@@ -545,12 +545,12 @@ sequenceDiagram
 ```mermaid
 flowchart TD
     Q["LP quote / last-look answer / stream push"] --> C{"RFQ state"}
-    C -->|"unknown or not Quoting"| X["Dropped (audit upstream) — no state change"]
+    C -->|"unknown or not Quoting"| X["Dropped (audit upstream) - no state change"]
     C -->|"Quoting"| W{"within quote_window?"}
     W -->|"yes"| QS["Quote recorded (validity capped ≤ now + 5 s), state → Quoted"]
-    W -->|"no (late)"| LQ["Recorded + LateQuote event — never shown, never wins"]
+    W -->|"no (late)"| LQ["Recorded + LateQuote event - never shown, never wins"]
     C -->|"Quoted"| H{"client hit"}
-    H -->|"price ≠ deal leg"| IG["Ignored — RFQ stays Quoted"]
+    H -->|"price ≠ deal leg"| IG["Ignored - RFQ stays Quoted"]
     H -->|"past valid_until"| EX["RFQ → Expired (exchange8_rfq_hit_expired for the client)"]
     H -->|"in window, no last look"| TR{"bind"}
     TR -->|"ok"| TD["Traded at quoted price"]
@@ -559,7 +559,7 @@ flowchart TD
     PK -->|"accept past deadline"| TR
     PK -->|"reject inside window"| RJ["RFQ → Rejected; rfq_reject row + counter; no trade"]
     PK -->|"no answer; sweep past deadline"| TR
-    TR -->|"counter/quote source error"| NOF["no trade — hit dies, no state change"]
+    TR -->|"counter/quote source error"| NOF["no trade - hit dies, no state change"]
 ```
 
 ```mermaid
@@ -586,7 +586,7 @@ sequenceDiagram
     participant R as relay (next boot / retry loop)
     participant SW as sweep timer
 
-    W->>DB: BEGIN — RFQ state + quotes + outbox + audit rows
+    W->>DB: BEGIN - RFQ state + quotes + outbox + audit rows
     W->>W: CRASH before relay (tx COMMITTED)
     Note over W,SW: RFQ state durable, outbox unrelayed, audit unpushed
     R->>DB: boot: SELECT unrelayed outbox
@@ -624,29 +624,29 @@ graph LR
     PUBE --> POOLP
     RLQ --> POOLP
     ALQ --> POOLP
-    ENG -->|"rfq.quote / rfq.event"| MBP[("MemBus — Valkey newest-wins")]
+    ENG -->|"rfq.quote / rfq.event"| MBP[("MemBus - Valkey newest-wins")]
     RLQ -->|"M2M POST /v1/produce"| BUSTP[("Sentin8:Bus")]
     ALQ -->|"M2M POST /v1/audit"| SYSTP[("Sentin8:Sys")]
 ```
 
-- **Task layout** — one HTTP acceptor; session drivers (one per client/LP
+- **Task layout** - one HTTP acceptor; session drivers (one per client/LP
   connection) feed the engine; one sweep timer (windows + last-look
   deadlines + pending-hit binding); one relay task (LISTEN
   `rfq_outbox_changed` + periodic unrelayed poll); one audit pusher. The
-  engine is single-threaded in-process state — all RFQ decisions serialize
+  engine is single-threaded in-process state - all RFQ decisions serialize
   through it, so no shared-mutex contention exists on the hot path.
-- **Pool sizing** — the shared `sentin8_config::pg_pool::connect` caps
+- **Pool sizing** - the shared `sentin8_config::pg_pool::connect` caps
   connections (default 3, overridable via `SENTIN8_PG_POOL_MAX`) so ~15
   vertical services cannot exhaust PostgreSQL. Relay and journal use the
   same pool; context is set transaction-locally per statement set.
-- **Hot paths** — quote ingest and hit binding are pure in-memory engine
+- **Hot paths** - quote ingest and hit binding are pure in-memory engine
   calls (sub-millisecond, no DB); persistence lands per transition. Caches:
   nothing hot-cached beyond the Shield policy engine set (hot-reload
   consumer keeps loaded sets fresh).
-- **Streaming model** — MemBus is newest-wins: a superseded quote ceases to
+- **Streaming model** - MemBus is newest-wins: a superseded quote ceases to
   exist, so backpressure cannot propagate stale prices; slow consumers see
   the newest state, never a stale queue replay.
-- **Backpressure** — the outbox partial index bounds the relay scan;
+- **Backpressure** - the outbox partial index bounds the relay scan;
   unrelayed rows retry with backoff so a Bus outage does not spin; the
   drain path checkpoints before shutdown.
 
@@ -655,17 +655,17 @@ graph LR
 Invariants (always true):
 
 1. A late quote is recorded, never shown to the client, and never wins or
-   binds — visibility and binding are both keyed on `late = false`.
+   binds - visibility and binding are both keyed on `late = false`.
 2. Engine receive timestamps are authoritative; LP-supplied times are
    advisory and never decide window membership.
 3. LP-declared validity is capped at receipt time plus
-   `MAX_VALID_WINDOW_US` (5 s) — no LP quote carries unbounded validity.
-4. A hit binds **only** at the quoted deal leg — the price is exact-equality
+   `MAX_VALID_WINDOW_US` (5 s) - no LP quote carries unbounded validity.
+4. A hit binds **only** at the quoted deal leg - the price is exact-equality
    matched; no price invention, averaging or tolerance band.
 5. A hit past the quoted `valid_until` expires the RFQ and cannot trade.
 6. A last-look rejection always produces `rfq:rejected`, no trade, and a
    persisted `rfq_reject` row; an accept (within or past the deadline)
-   always trades at the quoted price — asymmetry is deliberate.
+   always trades at the quoted price - asymmetry is deliberate.
 7. Quote fairness: one request, one simultaneous fan-out to every entitled
    LP; LP entitlement is per pair and evaluated at request time.
 8. Every streaming trade draws its id from the engine's single trade-id
@@ -680,19 +680,19 @@ Invariants (always true):
 
 Insecure defaults rejected:
 
-- **`danger_accept_invalid_certs` / hand-rolled CA loading** — TLS is
+- **`danger_accept_invalid_certs` / hand-rolled CA loading** - TLS is
   in-process via `sentin8-tls` (post-quantum, root CA in the OS trust
   store).
-- **LP-supplied timing as truth** — a client-configurable clock is a
+- **LP-supplied timing as truth** - a client-configurable clock is a
   fairness attack; engine stamps decide windows.
-- **Raw RFQ events on a public feed** — rejects LP/client identity leaks
+- **Raw RFQ events on a public feed** - rejects LP/client identity leaks
   (front-running, quote sniping); the anonymous projection replaces them.
-- **Unbounded LP-declared validity** — rejected; the engine caps it at
+- **Unbounded LP-declared validity** - rejected; the engine caps it at
   ingest.
-- **Direct cross-schema writes / blanket schema grants** — declared
+- **Direct cross-schema writes / blanket schema grants** - declared
   SELECT-only grants are the exact cross-service surface; everything else
   is membus/bus/owner-API.
-- **Static superuser service DSN** — the service role is unprivileged,
+- **Static superuser service DSN** - the service role is unprivileged,
   non-bypass, database-`exchange8`-only.
 
 No `unsafe` blocks exist in this service; the unsafe-rationale section is
@@ -704,7 +704,7 @@ same-connection context).
 
 ```mermaid
 graph TD
-    PYRAMID["Test pyramid — exchange8-rfq"] --> UT["Unit (pure engine)"]
+    PYRAMID["Test pyramid - exchange8-rfq"] --> UT["Unit (pure engine)"]
     PYRAMID --> CONF["Conformance scenarios (conformance.rs)"]
     PYRAMID --> PWT["Policy wiring (tests/policy.rs)"]
     PYRAMID --> SQL["SQL matrix (tests/sql_matrix.rs, live DB)"]
@@ -727,29 +727,29 @@ graph TD
     E2E --> E1["human-parity flows; no direct SQL/backend"]
 ```
 
-- **Unit layer** — the engine's pure core owns the domain matrix: routing
+- **Unit layer** - the engine's pure core owns the domain matrix: routing
   and entitlement expansion, quote window + lateness, validity capping, hit
   leg/price matching, last-look parking/accept/reject/deadline binding and
   per(LP, reason) counters, streaming newest-binds + withdraw + one-sided
   legs, and tape anonymization (identity leak assertions, one-sided and
   identity-bearing events never tapeable) with analytics scoring.
-- **Conformance layer** — `conformance.rs` replays the five deterministic
+- **Conformance layer** - `conformance.rs` replays the five deterministic
   design scenarios on a scripted clock through the real engine; these are
   the deployment-portable checks every environment honors.
-- **Policy layer** — proves the real seeded `scope-mirror` text evaluates
+- **Policy layer** - proves the real seeded `scope-mirror` text evaluates
   fail-closed, respects `mode`/`origin`, isolates sets per `env_id`, keeps
   M2M parity, lets platform-admin scopes pass, lets a tenant forbid or
   role-grant decide, covers every handler action, and dry-runs clean at
   enroll.
-- **SQL matrix** — live PostgreSQL via the non-bypass `exchange8_probe`
+- **SQL matrix** - live PostgreSQL via the non-bypass `exchange8_probe`
   role: RLS enforcement (no context → 0 rows, insert without context →
   rejected, own env → own rows only, cross env → 0 rows) and FORCE RLS +
   policy coverage for every table the shipped `init.sql` declares. Skips
   silently when the DB is unreachable so test runs stay hermetic.
-- **Deliberately not tested here** — platform TLS/RLS plumbing itself,
+- **Deliberately not tested here** - platform TLS/RLS plumbing itself,
   Sentin8:Bus delivery guarantees, Shield engine internals: covered by the
   platform's own test strategy docs.
-- **E2E** — the vertical's `e2e-ts` suite drives the real UI through the
+- **E2E** - the vertical's `e2e-ts` suite drives the real UI through the
   BFF only (no direct SQL or backend calls), so admin surfaces are
   exercised as a human would.
 
@@ -757,7 +757,7 @@ graph TD
 
 - The FIX 4.4 QuoteReq/WS session transports, bus consumers, the sweep
   timer and the MemBus publish path are declared by the design but not
-  wired in this binary — the HTTP router carries health + Shield
+  wired in this binary - the HTTP router carries health + Shield
   policy-admin only, and no domain endpoint/handler mounts exist. Wiring
   lands with the runtime-wiring pass mirroring the sibling services.
 - RFW pages (`rfqs`, `pairs`, `lp-sessions`) are registered but their
@@ -770,7 +770,7 @@ graph TD
   engine consumes injected counters today; lease-at-startup wiring is the
   vertical id-substrate pattern (data-model design §2a) and is outstanding.
 - The tape SSE publisher surface and session-entitlement model for
-  streaming quotes (`exchange8:rfq:stream:read` consumers) — the endpoint
+  streaming quotes (`exchange8:rfq:stream:read` consumers) - the endpoint
   contract for RFQ is not fixed yet.
 - The `rfq.currency_exposure` update path and the interplay with Exchange8:Risk's
   per-currency limit decisions (who shifts net positions, when) is a

@@ -3,7 +3,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Exchange8:RFQ
 // SPDX-License-Identifier: Apache-2.0
 
-//! Exchange8:RFQ engine — FX quote-driven trading core (DESIGN.md §1, §4).
+//! Exchange8:RFQ engine - FX quote-driven trading core (DESIGN.md §1, §4).
 //!
 //! The state machine:
 //! `Open → Quoting → Quoted → Traded | Expired | Rejected`, plus the
@@ -11,7 +11,7 @@
 //!
 //! Rules implemented here:
 //! - **Quote window** (per RFQ): LP responses after the window are `late`
-//!   — recorded, rejected, never shown to the client.
+//!   - recorded, rejected, never shown to the client.
 //! - **Last look** (per LP, bounded): a hit within `valid_until` must fill
 //!   at the quoted price with `no last look`; with last look the LP may
 //!   reject inside `last_look_window`, producing `rfq:rejected` + an
@@ -46,7 +46,7 @@ pub struct RfqRequest {
     /// Requesting client CompID.
     pub client_conn: String,
     pub pair_id: u64,
-    /// 'B'/'S' — the side the client wants to deal.
+    /// 'B'/'S' - the side the client wants to deal.
     pub side: Side,
     pub qty: f64,
     /// Tenor code (SP for spot).
@@ -98,9 +98,9 @@ pub struct HitRequest {
 /// Engine events out (bus/shell consumes).
 #[derive(Clone, Debug, PartialEq)]
 pub enum RfqEvent {
-    /// `exchange8:rfq:requested` — routed to N LPs.
+    /// `exchange8:rfq:requested` - routed to N LPs.
     Requested { rfq_id: u64, lp_count: usize },
-    /// `exchange8:rfq:quoted` — a valid (non-late) quote landed.
+    /// `exchange8:rfq:quoted` - a valid (non-late) quote landed.
     Quoted {
         rfq_id: u64,
         lp_conn: String,
@@ -118,7 +118,7 @@ pub enum RfqEvent {
     /// `exchange8:rfq:expired` (window elapsed with no quotes, or the hit
     /// window closed).
     Expired { rfq_id: u64 },
-    /// `exchange8:rfq:rejected` — LP last-look reject.
+    /// `exchange8:rfq:rejected` - LP last-look reject.
     Rejected {
         rfq_id: u64,
         lp_conn: String,
@@ -208,7 +208,7 @@ impl RfqEngine {
     // -- RFQ flow ---------------------------------------------------------
 
     /// Client request: route to all entitled RFQ-provider LPs at once
-    /// (fair routing — no LP sees it earlier).
+    /// (fair routing - no LP sees it earlier).
     pub fn request(&mut self, mut req: RfqRequest, _now_us: u64) -> Vec<RfqEvent> {
         if req.quote_window_us == 0 {
             req.quote_window_us = DEFAULT_QUOTE_WINDOW_US;
@@ -245,7 +245,7 @@ impl RfqEngine {
     /// as `late` (audit) and never shown.
     pub fn on_quote(&mut self, rfq_id: u64, mut quote: LpQuote, now_us: u64) -> Vec<RfqEvent> {
         let Some(rfq) = self.rfqs.get_mut(&rfq_id) else {
-            return Vec::new(); // unknown RFQ — drop (audit upstream)
+            return Vec::new(); // unknown RFQ - drop (audit upstream)
         };
         if rfq.state != RfqState::Quoting {
             return Vec::new(); // terminal/quoted-late window: ignore
@@ -254,7 +254,7 @@ impl RfqEngine {
         // Late check: engine time vs the request window.
         let window_end = rfq.req.quote_window_us; // relative to request time
         let _ = window_end; // the shell passes absolute now; lateness is
-                            // computed by the caller (below) — the engine
+                            // computed by the caller (below) - the engine
                             // records the LP-declared flag.
                             // Bound the LP-declared validity.
         if quote.valid_until_us > now_us.saturating_add(MAX_VALID_WINDOW_US) {
@@ -318,7 +318,7 @@ impl RfqEngine {
             Side::Sell => bid,
         };
         if deal_leg != Some(hit.deal_price) {
-            return Vec::new(); // stale/edited quote — ignore
+            return Vec::new(); // stale/edited quote - ignore
         }
         let last_look_us = self
             .lps
@@ -354,7 +354,7 @@ impl RfqEngine {
             return;
         };
         if now_us > p.deadline_us {
-            // LP answered too late — the trade binds anyway (asymmetric
+            // LP answered too late - the trade binds anyway (asymmetric
             // rules: an expired last-look window fills at the quote).
             // Counted for analytics.
             *self
@@ -437,7 +437,7 @@ impl RfqEngine {
     // -- Streaming quotes -------------------------------------------------
 
     /// LP pushes a two-way streaming quote (replaces its previous live
-    /// quote on the pair — newest binds).
+    /// quote on the pair - newest binds).
     pub fn on_stream_quote(&mut self, q: StreamQuote) {
         self.streams.insert((q.lp_conn.clone(), q.pair_id), q);
     }
@@ -536,7 +536,7 @@ mod tests {
                 lp_conn: "LP1".into(),
                 rfq_provider: true,
                 streams: true,
-                last_look_us: 0, // no last look — fills bind
+                last_look_us: 0, // no last look - fills bind
                 entitled_pairs: vec![],
             },
             LpConfig {

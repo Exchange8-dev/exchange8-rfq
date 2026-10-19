@@ -6,7 +6,7 @@
 //! Anonymized RFQ tape + last-look analytics (DESIGN.md §4).
 //!
 //! Design `design/sentin8-exchange8-fx-technical-design.md` §3.5/§3.6:
-//! - The RFQ tape is an **anonymized** public feed of quote activity —
+//! - The RFQ tape is an **anonymized** public feed of quote activity -
 //!   LP identities and client connection ids are stripped; only the
 //!   pair, the two-way price, and the dealt side/qty survive. This lets
 //!   market-data consumers see RFQ liquidity without leaking which LP
@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 
 /// One anonymized tape entry (public feed shape).
 ///
-/// `pair_id` is the numeric instrument id — symbols resolve client-side
+/// `pair_id` is the numeric instrument id - symbols resolve client-side
 /// via refdata; no LP or client identity ever appears.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct TapeEntry {
@@ -36,7 +36,7 @@ pub struct TapeEntry {
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum TapeKind {
-    /// An RFQ was broadcast (pair + size, no side — side would leak
+    /// An RFQ was broadcast (pair + size, no side - side would leak
     /// the client's intent and move the LP's quote).
     RfqBroadcast { pair_id: u64, qty: f64 },
     /// A two-way quote landed (anonymized: no lp identity).
@@ -102,7 +102,7 @@ impl RfqTape {
                 let (pair_id, _) = pair_of(*rfq_id);
                 TapeKind::Expired { pair_id }
             }
-            // Rejected and LateQuote carry LP identity / reasons —
+            // Rejected and LateQuote carry LP identity / reasons -
             // they are audit + analytics only, never tapeable.
             RfqEvent::Rejected { .. } | RfqEvent::LateQuote { .. } => return None,
         };
@@ -124,7 +124,7 @@ impl RfqTape {
 /// Last-look analytics: per-LP scorecard inputs (private, admin-scoped).
 ///
 /// Design §3.2 "last look bounded": the venue tracks how often each LP
-/// exercises last look and how often it answers late — the reject-rate
+/// exercises last look and how often it answers late - the reject-rate
 /// gate for continued RFQ entitlement.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LastLookAnalytics {
@@ -141,7 +141,7 @@ pub struct LpStats {
     pub accepted: u64,
     /// Last-look rejects (client's hit was declined).
     pub rejected: u64,
-    /// Accepts that arrived after the LP's deadline (asymmetric —
+    /// Accepts that arrived after the LP's deadline (asymmetric -
     /// counted as trades but flagged for the scorecard).
     pub late_accepts: u64,
 }
@@ -152,7 +152,7 @@ impl LastLookAnalytics {
     }
 
     /// Fold engine events into the scorecard. LateQuote events are
-    /// late *quotes* (window), not last-look answers — ignored here.
+    /// late *quotes* (window), not last-look answers - ignored here.
     pub fn record(&mut self, ev: &RfqEvent) {
         match ev {
             RfqEvent::Quoted { lp_conn, .. } => {
@@ -274,7 +274,7 @@ mod tests {
     fn tape_drops_identity_events_and_one_sided_quotes() {
         let mut tape = RfqTape::new();
         let pair_of = |_: u64| (7u64, 0.0);
-        // Rejected carries LP identity — never tapeable.
+        // Rejected carries LP identity - never tapeable.
         assert!(tape
             .record(
                 &RfqEvent::Rejected {
