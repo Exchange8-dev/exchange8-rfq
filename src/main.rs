@@ -16,8 +16,8 @@
 // supervisors, purge jobs) are in-process tokio tasks, so the
 mod conformance;
 mod engine;
-mod registration;
 mod openapi;
+mod registration;
 mod tape;
 
 use std::sync::Arc;
