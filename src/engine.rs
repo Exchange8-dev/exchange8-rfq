@@ -205,7 +205,7 @@ impl RfqEngine {
         }
     }
 
-    // -- RFQ flow ---------------------------------------------------------
+    // -- RFQ flow ------------------------------------------------------
 
     /// Client request: route to all entitled RFQ-provider LPs at once
     /// (fair routing - no LP sees it earlier).
@@ -434,7 +434,7 @@ impl RfqEngine {
         });
     }
 
-    // -- Streaming quotes -------------------------------------------------
+    // -- Streaming quotes ----------------------------------------------
 
     /// LP pushes a two-way streaming quote (replaces its previous live
     /// quote on the pair - newest binds).
@@ -487,7 +487,7 @@ impl RfqEngine {
         self.streams.get(&(lp_conn.to_string(), pair_id))
     }
 
-    // -- Diagnostics ------------------------------------------------------
+    // -- Diagnostics ---------------------------------------------------
 
     pub fn state(&self, rfq_id: u64) -> Option<RfqState> {
         self.rfqs.get(&rfq_id).map(|r| r.state)
